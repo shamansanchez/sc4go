@@ -106,3 +106,13 @@ func ReadRegion(region []byte) (out RegionView) {
 
 	return
 }
+
+// GetRegionData returns the RegionView data for a city
+func GetRegionData(city DBPF) (region RegionView) {
+	region = RegionView{}
+
+	regionData := city.FileContents["CA027EDB.CA027EE1.0"]
+	regionBytes := QFSDecompress(regionData)
+
+	return ReadRegion(regionBytes)
+}

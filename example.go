@@ -23,9 +23,7 @@ func main() {
 		n := c.Name()
 		if filepath.Ext(n) == ".sc4" {
 			city := dbpf.ReadDBPF(path + n)
-			regionData := city.FileContents["CA027EDB.CA027EE1.0"]
-			regionBytes := dbpf.QFSDecompress(regionData)
-			info := dbpf.ReadRegion(regionBytes)
+			info := dbpf.GetRegionData(city)
 
 			fmt.Printf("===== %s =====\nVersion: %d.%d\nMayor: %s\nPopulation: %d\nGUID: 0x%X\n\n",
 				info.Name,

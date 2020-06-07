@@ -3,10 +3,12 @@ package dbpf
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"encoding/binary"
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 )
 
 // DBPF is the top level struct for a DBPF file
@@ -15,6 +17,7 @@ type DBPF struct {
 	Directory    map[string]DirectoryEntry
 	Index        map[string]IndexEntry
 	FileContents map[string][]byte
+	SHA256Sum    [32]byte
 }
 
 // Header DBPF File Header
@@ -68,13 +71,19 @@ func GetFileByTGI(dbpf *DBPF, typeID uint32, groupID uint32, instanceID uint32) 
 
 // ReadDBPF reads a dbpf file
 func ReadDBPF(path string) (city DBPF) {
+	rawBytes, err := ioutil.ReadFile(path)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return ReadRawDBPF(rawBytes)
+}
+
+// ReadRawDBPF reads a dbpf file from raw bytes
+func ReadRawDBPF(rawBytes []byte) (city DBPF) {
 	city = DBPF{}
 
-	rawBytes, err := ioutil.ReadFile(path)
-
-	if err != nil {
-		panic(err)
-	}
+	city.SHA256Sum = sha256.Sum256(rawBytes)
 
 	r := bytes.NewReader(rawBytes)
 	city.Header = Header{}
@@ -90,6 +99,8 @@ func ReadDBPF(path string) (city DBPF) {
 		binary.Read(r, binary.LittleEndian, &i)
 
 		tgi := getTGIString(i.TypeID, i.GroupID, i.InstanceID)
+		// log.Printf("Index: %s size %d", tgi, i.FileSize)
+
 		city.Index[tgi] = i
 		city.FileContents[tgi] = rawBytes[i.FileLocation : i.FileLocation+i.FileSize]
 	}
@@ -101,6 +112,7 @@ func ReadDBPF(path string) (city DBPF) {
 		for {
 			err := binary.Read(dirReader, binary.LittleEndian, &dir)
 			tgi := getTGIString(dir.TypeID, dir.GroupID, dir.InstanceID)
+			// log.Printf("DBDF: %s size %d", tgi, dir.FileSize)
 
 			if err == io.EOF {
 				break

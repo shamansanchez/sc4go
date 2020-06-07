@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 )
 
 // DBPF is the top level struct for a DBPF file
@@ -70,13 +69,13 @@ func GetFileByTGI(dbpf *DBPF, typeID uint32, groupID uint32, instanceID uint32) 
 }
 
 // ReadDBPF reads a dbpf file
-func ReadDBPF(path string) (city DBPF) {
+func ReadDBPF(path string) (city DBPF, err error) {
 	rawBytes, err := ioutil.ReadFile(path)
 	if err != nil {
-		log.Fatal(err)
+		return DBPF{}, err
 	}
 
-	return ReadRawDBPF(rawBytes)
+	return ReadRawDBPF(rawBytes), err
 }
 
 // ReadRawDBPF reads a dbpf file from raw bytes
